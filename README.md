@@ -40,5 +40,5 @@ TFTPはネットワーク機器などの設定ファイルやファームウェ�
 * TFTPクライアントは少なくともローカルネット内のみで動作させるようにして下さい。
 * TFTPが不必要なときは、停止させてください。
 
-Copyright (c) 2016-2019 Wataru KUNINO  
+Copyright (c) 2016-2021 Wataru KUNINO  
 <https://bokunimo.net/>
