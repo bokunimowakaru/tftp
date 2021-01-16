@@ -19,6 +19,7 @@ Raspberry PiへのTFTPサーバのインストール方法
     TFTP_USERNAME="tftp"
     TFTP_DIRECTORY="/srv/tftp"
     TFTP_ADDRESS="0.0.0.0:69"
+    TFTP_OPTIONS="--secure"
 
 ## TFTPサーバの起動と停止
 
@@ -45,9 +46,9 @@ Raspberry PiへのTFTPサーバのインストール方法
 
 #include <WiFi.h>                           // ESP32用WiFiライブラリ
 #include <SD.h>                             // TFカード用ライブラリ
-#define SSID "1234ABCD"                     // 無線LANアクセスポイントのSSID
-#define PASS "password"                     // パスワード
-#define IP_SERVER "192.168.0.167"           // TFTPサーバのIPアドレス
+#define SSID "1234ABCD"                     // ★要変更★無線LAN APのSSID
+#define PASS "password"                     // ★要変更★パスワード
+#define TFTP_SERV "192.168.0.123"           // ★要変更★TFTPサーバのIPアドレス
 #define SD_CS_PIN 4                         // SDライブラリを起動するCSピン番号
 #define FILENAME "/tftpc_1.ini"             // ファイル名
 
@@ -70,15 +71,15 @@ void setup(){                               // 起動時に一度だけ実行す
 
 void loop(){
     char data[513];                         // TFTPデータ用変数
-    int len = 512;                          // TFTPデータ長(初期値は512)
+    int len;                                // TFTPデータ長
     
-    tftpStart(IP_SERVER);                   // TFTPの開始
+    tftpStart(TFTP_SERV, FILENAME);         // TFTPの開始
     File file = SD.open(FILENAME, "w");     // ファイルを書き込み形式で開く
-    while(len == 512){                      // ファイルサイズが512バイトのとき
+    do{                                     // 繰り返し処理
         len = tftpGet(data);                // TFTP受信(data=受信データ)
         file.print(data);                   // 書き込みを実行
         Serial.print(data);                 // 受信データを表示
-    }
+    }while(len == 512);                     // 512バイトのときに繰り返し
     file.close();                           // ファイルを閉じる
     delay(60000);                           // 60秒の待ち時間処理
 }

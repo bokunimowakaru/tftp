@@ -20,6 +20,7 @@ Raspberry PiへのTFTPサーバのインストール方法
     TFTP_USERNAME="tftp"
     TFTP_DIRECTORY="/srv/tftp"
     TFTP_ADDRESS="0.0.0.0:69"
+    TFTP_OPTIONS="--secure"
 
 ## TFTPサーバの起動と停止
 
@@ -46,9 +47,10 @@ Raspberry PiへのTFTPサーバのインストール方法
 
 #include <WiFi.h>                           // ESP32用WiFiライブラリ
 #include <WiFiUdp.h>                        // UDP通信を行うライブラリ
-#define SSID "1234ABCD"                     // 無線LANアクセスポイントのSSID
-#define PASS "password"                     // パスワード
-#define IP_SERVER "192.168.0.255"           // TFTPサーバのIPアドレス
+#define SSID "1234ABCD"                     // ★要変更★無線LAN APのSSID
+#define PASS "password"                     // ★要変更★パスワード
+#define TFTP_SERV "192.168.0.123"           // ★要変更★TFTPサーバのIPアドレス
+#define FILENAME  "tftpc_1.ini"             // ★要変更★転送ファイル名
 #define PORT 1024                           // 送信のポート番号
 #define DEVICE "tftpc_1,"                   // デバイス名(5文字+"_"+番号+",")
 IPAddress IP_BROAD;                         // ブロードキャストIPアドレス(CL C)
@@ -75,18 +77,20 @@ void loop(){
     char data[513];                         // TFTPデータ用変数
     int len;                                // TFTPデータ長
     
-    tftpStart(IP_SERVER);                   // TFTPの開始
-    len = tftpGet(data);                    // TFTP受信(data=受信データ)
-    if(len > 0){                            // 受信データがある時
+    tftpStart(TFTP_SERV, FILENAME);         // TFTPの開始
+    udp.beginPacket(IP_BROAD, PORT);        // UDP送信先を設定
+    udp.print(DEVICE);                      // デバイス名を送信
+    do{                                     // 繰り返し処理
+        len = tftpGet(data);                // TFTP受信(data=受信データ)
+        Serial.print(data);                 // 受信データを表示
         for(int i = 0;i < len; i++){        // 英数字以外を_に置き換える
             if(!isAlphaNumeric(data[i])) data[i]='_';
         }
-        udp.beginPacket(IP_BROAD, PORT);    // UDP送信先を設定
-        udp.print(DEVICE);                  // デバイス名を送信
         udp.println(data);                  // 変数dataの内容を送信
-        udp.endPacket();                    // UDP送信の終了(実際に送信する)
-        delay(200);                         // 送信待ち時間
-        Serial.print(data);                 // 受信データを表示
-    }
+    }while(len == 512);                     // 512バイトのときに繰り返し
+    udp.println();                          // 改行を送信
+    udp.endPacket();                        // UDP送信の終了(実際に送信する)
+    delay(200);                             // 送信待ち時間
+    Serial.println();                       // 改行
     delay(60000);                           // 60秒の待ち時間処理
 }
